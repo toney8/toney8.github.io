@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Sudoku Hinto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        color-scheme: light dark;
+        --bg:#f6f4ee;
+        --panel:#fffdf7;
+        --panel-2:#efece3;
+        --ink:#22252b;
+        --ink-2:#5d626b;
+        --line:#ddd6c6;
+        --accent:#d2432a;
+        --accent-soft:rgba(210,67,42,.12);
+        --blue:#2456c8;
+        --blue-soft:rgba(36,86,200,.10);
+        --grid-thick:#2a251d;
+        --grid-thin:#c9c1ac;
+        --sel:#ffe08a;
+        --ok:#1d7a4f;
+        --shadow:0 10px 30px rgba(34,32,24,.10);
+        --radius:18px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#101216;
+          --panel:#1b1e24;
+          --panel-2:#23262e;
+          --ink:#edeae2;
+          --ink-2:#a6abb4;
+          --line:#343842;
+          --accent:#ff6f57;
+          --accent-soft:rgba(255,111,87,.16);
+          --blue:#82a6ff;
+          --blue-soft:rgba(130,166,255,.14);
+          --grid-thick:#e9e5d9;
+          --grid-thin:#3b404a;
+          --sel:#5c4a12;
+          --ok:#4cc38a;
+          --shadow:0 10px 30px rgba(0,0,0,.45);
+        }
+      }
+      *{ box-sizing:border-box; }
+      html{ -webkit-text-size-adjust:100%; }
+      body{
+        margin:0;
+        background:var(--bg);
+        color:var(--ink);
+        font-family:"Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+        line-height:1.55;
+      }
+      button{ font:inherit; color:inherit; }
+      .hidden{ display:none !important; }
+
+      .app{
+        max-width:680px;
+        margin:0 auto;
+        padding:
+          calc(14px + env(safe-area-inset-top))
+          calc(16px + env(safe-area-inset-right))
+          calc(20px + env(safe-area-inset-bottom))
+          calc(16px + env(safe-area-inset-left));
+      }
+      @media (min-width:700px) and (max-width:1099px){
+        .app{ max-width:780px; }
+      }
+      @media (min-width:1100px){
+        .app{ max-width:1440px; padding-top:calc(22px + env(safe-area-inset-top)); }
+      }
+
+      /* ---------- top bar ---------- */
+      .topbar{
+        display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 18px;
+        margin-bottom:16px;
+      }
+      .brand{
+        font-family:"Caveat","Noto Sans SC",cursive;
+        font-size:40px; font-weight:700; line-height:1; letter-spacing:.5px;
+      }
+      .brand .brand-sub{
+        font-family:"Noto Sans SC",sans-serif;
+        font-size:13px; font-weight:500; color:var(--ink-2);
+        margin-left:10px; letter-spacing:2px;
+      }
+      .steps{
+        list-style:none; display:flex; gap:6px; margin:0 0 4px auto; padding:0; flex-wrap:wrap;
+      }
+      .steps li{
+        font-size:13px; font-weight:500; color:var(--ink-2);
+        border:1.5px solid var(--line); border-radius:999px;
+        padding:5px 12px; background:var(--panel);
+        display:flex; align-items:center; gap:6px;
+      }
+      .steps li b{
+        font-weight:900; font-style:normal;
+        width:18px; height:18px; border-radius:50%;
+        background:var(--panel-2); color:var(--ink-2);
+        display:inline-flex; align-items:center; justify-content:center; font-size:12px;
+      }
+      .steps li.on{ color:var(--ink); border-color:var(--ink); }
+      .steps li.on b{ background:var(--accent); color:#fff; }
+      .steps li.done{ color:var(--ink-2); }
+      .steps li.done b{ background:var(--ok); color:#fff; }
+
+      /* ---------- workspace layout ---------- */
+      .workspace{
+        display:grid; grid-template-columns:minmax(0,1fr); gap:18px; align-items:start;
+      }
+      @media (min-width:1100px){
+        .workspace{
+          grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+          column-gap:64px; /* 让 Duo 展开时的折痕落在两栏之间的空隙里 */
+        }
+        .panel{ position:sticky; top:calc(14px + env(safe-area-inset-top)); }
+      }
+      .workspace.no-visual{ grid-template-columns:minmax(0,1fr); }
+      @media (min-width:1100px){
+        .workspace.no-visual .panel{ max-width:640px; margin:0 auto; width:100%; }
+      }
+
+      .visual{
+        background:var(--panel); border:1.5px solid var(--line); border-radius:var(--radius);
+        box-shadow:var(--shadow); padding:14px;
+      }
+      .panel{ display:flex; flex-direction:column; gap:14px; }
+      .card{
+        background:var(--panel); border:1.5px solid var(--line); border-radius:var(--radius);
+        box-shadow:var(--shadow); padding:18px;
+      }
+      .card h2{ margin:0 0 6px; font-size:20px; font-weight:900; }
+      .card p{ margin:0 0 12px; color:var(--ink-2); font-size:15px; }
+      .card p:last-child{ margin-bottom:0; }
+
+      /* ---------- views ---------- */
+      .view-camera{
+        position:relative; border-radius:12px; overflow:hidden; background:#000;
+        aspect-ratio:4/3; max-height:72dvh;
+      }
+      .view-camera video{
+        width:100%; height:100%; display:block; object-fit:cover;
+      }
+      .cam-guide{
+        position:absolute; inset:0; pointer-events:none;
+        display:flex; align-items:center; justify-content:center;
+      }
+      .cam-guide::before{
+        content:""; width:76%; aspect-ratio:1;
+        border:3px solid rgba(255,255,255,.9); border-radius:14px;
+        box-shadow:0 0 0 999px rgba(0,0,0,.38);
+      }
+      .cam-guide span{
+        position:absolute; bottom:10px; left:0; right:0; text-align:center;
+        color:#fff; font-size:13px; text-shadow:0 1px 4px rgba(0,0,0,.8);
+      }
+      .view-empty{
+        border:2px dashed var(--line); border-radius:12px;
+        padding:26px 18px; text-align:center; color:var(--ink-2);
+      }
+      .view-empty .mini{
+        display:grid; grid-template-columns:repeat(9,1fr);
+        width:180px; margin:0 auto 14px; border:2.5px solid var(--grid-thick); border-radius:6px; overflow:hidden;
+      }
+      .view-empty .mini i{
+        aspect-ratio:1; border-right:1px solid var(--grid-thin); border-bottom:1px solid var(--grid-thin);
+        font-style:normal; display:flex; align-items:center; justify-content:center;
+        font-size:13px; font-weight:700; color:var(--ink); background:var(--panel);
+      }
+      .view-empty .mini i:nth-child(9n){ border-right:none; }
+      .view-empty .mini i:nth-child(n+73){ border-bottom:none; }
+      .view-empty .mini i.hot{ color:var(--accent); box-shadow:inset 0 0 0 2.5px var(--accent); border-radius:2px; }
+      .view-note{
+        margin:10px 2px 0; font-size:13.5px; color:var(--ink-2);
+        display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      }
+
+      .photo-wrap{ position:relative; border-radius:12px; overflow:hidden; background:#000; }
+      .photo-wrap img{ width:100%; display:block; }
+      .photo-wrap svg{
+        position:absolute; inset:0; width:100%; height:100%;
+        touch-action:none; display:block;
+      }
+      .photo-wrap svg.aligning{ cursor:grab; }
+      .hint-chip{
+        position:absolute; transform:translate(-50%,-150%);
+        background:var(--accent); color:#fff; font-weight:900; font-size:13px;
+        padding:4px 10px; border-radius:999px; white-space:nowrap;
+        box-shadow:0 4px 14px rgba(0,0,0,.35); pointer-events:none; z-index:3;
+      }
+      .hint-chip::after{
+        content:""; position:absolute; left:50%; bottom:-6px; transform:translateX(-50%);
+        border:6px solid transparent; border-top-color:var(--accent); border-bottom:none;
+      }
+      @keyframes pulse-ring{
+        0%{ opacity:.95; } 50%{ opacity:.35; } 100%{ opacity:.95; }
+      }
+      .pulse{ animation:pulse-ring 1.6s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce){
+        .pulse{ animation:none; }
+        .cell.hinted{ animation:none !important; }
+      }
+
+      /* ---------- buttons ---------- */
+      .btn{
+        appearance:none; border:1.5px solid var(--line); background:var(--panel);
+        border-radius:14px; min-height:48px; padding:10px 16px;
+        font-size:16px; font-weight:700; cursor:pointer;
+        display:inline-flex; align-items:center; justify-content:center; gap:8px;
+        width:100%; text-align:center;
+      }
+      .btn:active{ transform:translateY(1px); }
+      .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+      .btn.ink{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
+      .btn.ghost{ background:transparent; }
+      .btn.small{ min-height:44px; font-size:14px; padding:6px 12px; width:auto; }
+      .btn[disabled]{ opacity:.45; pointer-events:none; }
+      .btn-row{ display:flex; gap:10px; flex-wrap:wrap; }
+      .btn-row .btn{ flex:1 1 140px; }
+      .btn .ic{ width:20px; height:20px; flex:none; }
+      .stack{ display:flex; flex-direction:column; gap:10px; }
+      .or{
+        display:flex; align-items:center; gap:12px; color:var(--ink-2); font-size:13px; margin:2px 0;
+      }
+      .or::before,.or::after{ content:""; flex:1; border-top:1px solid var(--line); }
+
+      .progress{
+        height:10px; border-radius:99px; background:var(--panel-2); overflow:hidden; margin-top:10px;
+      }
+      .progress i{ display:block; height:100%; width:0%; background:var(--accent); border-radius:99px; transition:width .2s; }
+      .progress-text{ font-size:13px; color:var(--ink-2); margin-top:6px; min-height:1.4em; }
+
+      .status{
+        font-size:14.5px; border-radius:12px; padding:10px 12px; min-height:1.5em;
+        background:var(--panel-2); color:var(--ink); display:none;
+      }
+      .status.show{ display:block; }
+      .status.warn{ background:var(--accent-soft); }
+      .status.good{ background:rgba(29,122,79,.14); }
+
+      /* ---------- board ---------- */
+      .board{
+        display:grid; grid-template-columns:repeat(9,minmax(0,1fr));
+        border:3px solid var(--grid-thick); border-radius:12px; overflow:hidden;
+        background:var(--panel); user-select:none; -webkit-user-select:none;
+        -webkit-tap-highlight-color:transparent;
+      }
+      .cell{
+        appearance:none; border:none; background:transparent; cursor:pointer;
+        aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+        font-size:clamp(17px,5.2vw,30px); line-height:1; padding:0; position:relative;
+        border-right:1px solid var(--grid-thin); border-bottom:1px solid var(--grid-thin);
+        font-family:ui-rounded,"SF Pro Rounded",system-ui,sans-serif;
+        color:var(--blue); font-weight:600;
+      }
+      @media (min-width:1100px){ .cell{ font-size:clamp(20px,2.2vw,32px); } }
+      .cell.given{ color:var(--ink); font-weight:900; }
+      .cell.given.touched{ color:var(--blue); }
+      .cell:nth-child(9n){ border-right:none; }
+      .cell:nth-child(n+73){ border-bottom:none; }
+      .cell:nth-child(9n+3), .cell:nth-child(9n+6){ border-right:2.5px solid var(--grid-thick); }
+      .cell:nth-child(n+19):nth-child(-n+27),
+      .cell:nth-child(n+46):nth-child(-n+54){ border-bottom:2.5px solid var(--grid-thick); }
+      .cell.peer{ background:var(--blue-soft); }
+      .cell.same{ background:var(--sel); }
+      .cell.selected{ background:var(--sel); box-shadow:inset 0 0 0 2.5px var(--ink); }
+      .cell.conflict{ background:var(--accent-soft); color:var(--accent) !important; }
+      .cell.hint-unit{ background:var(--accent-soft); }
+      .cell.hinted{
+        box-shadow:inset 0 0 0 3.5px var(--accent); color:var(--accent);
+        animation:pulse-ring 1.6s ease-in-out infinite; z-index:1;
+      }
+      .pad{
+        display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px;
+      }
+      .pad button{
+        appearance:none; border:1.5px solid var(--line); background:var(--panel-2);
+        border-radius:12px; min-height:48px; font-size:20px; font-weight:800; cursor:pointer;
+        font-family:ui-rounded,"SF Pro Rounded",system-ui,sans-serif;
+      }
+      .pad button:active{ background:var(--sel); }
+      .pad button.erase{ font-size:15px; font-weight:700; font-family:inherit; }
+      .legend{ font-size:13px; color:var(--ink-2); margin-top:10px; display:flex; gap:16px; flex-wrap:wrap; }
+      .legend b.g{ color:var(--ink); } .legend b.u{ color:var(--blue); }
+
+      /* ---------- hint card ---------- */
+      .hint-card{
+        border:2px solid var(--accent); border-radius:var(--radius);
+        padding:18px; background:var(--panel); box-shadow:var(--shadow);
+      }
+      .hint-card .where{
+        font-family:"Caveat","Noto Sans SC",cursive;
+        font-size:30px; font-weight:700; color:var(--accent); line-height:1.15; margin:0 0 4px;
+      }
+      .hint-card h3{ margin:0 0 6px; font-size:18px; font-weight:900; }
+      .hint-card p{ margin:0 0 10px; font-size:15px; color:var(--ink); }
+      .hint-card p.dim{ color:var(--ink-2); font-size:14px; }
+      .chips{ display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 4px; }
+      .chips span{
+        width:34px; height:34px; border-radius:9px; border:1.5px solid var(--line);
+        background:var(--panel-2); display:inline-flex; align-items:center; justify-content:center;
+        font-weight:800; font-size:16px; font-family:ui-rounded,system-ui,sans-serif;
+      }
+      .chips span.miss{ border-color:var(--accent); color:var(--accent); border-style:dashed; background:var(--accent-soft); }
+      .level-dots{ display:flex; gap:6px; margin-bottom:10px; }
+      .level-dots i{ width:26px; height:6px; border-radius:99px; background:var(--panel-2); }
+      .level-dots i.on{ background:var(--accent); }
+
+      footer{
+        margin-top:22px; padding-top:14px; border-top:1px solid var(--line);
+        color:var(--ink-2); font-size:13px; display:flex; flex-wrap:wrap; gap:6px 18px;
+      }
+      footer .fname{ font-family:"Caveat",cursive; font-size:19px; color:var(--ink); }
+      .toast{
+        position:fixed; left:50%; transform:translateX(-50%) translateY(20px);
+        bottom:calc(18px + env(safe-area-inset-bottom));
+        background:var(--ink); color:var(--bg); padding:11px 18px; border-radius:999px;
+        font-size:14.5px; font-weight:500; opacity:0; pointer-events:none; transition:.25s;
+        max-width:min(92vw,520px); text-align:center; z-index:50; box-shadow:var(--shadow);
+      }
+      .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">Sudoku Hinto<span class="brand-sub">数独 · 下一步提示</span></div>
+        <ol class="steps" id="stepsBar">
+          <li data-step="1" class="on"><b>1</b>拍照</li>
+          <li data-step="2"><b>2</b>对齐</li>
+          <li data-step="3"><b>3</b>确认棋盘</li>
+          <li data-step="4"><b>4</b>提示</li>
+        </ol>
+      </header>
+
+      <main class="workspace" id="workspace">
+        <!-- 左 / 上：相机与照片 -->
+        <section class="visual" id="visualPanel" aria-label="照片">
+          <div class="view view-camera hidden" id="viewCamera">
+            <video id="camVideo" playsinline muted autoplay></video>
+            <div class="cam-guide"><span>把整个棋盘放进框里，光线均匀、尽量拍正</span></div>
+          </div>
+
+          <div class="view-empty" id="viewEmpty">
+            <div class="mini" id="miniGrid" aria-hidden="true"></div>
+            <div>拍下纸上的数独，照片会出现在这里；<br />下一步该走哪一格，会像红笔批改一样圈在照片上。</div>
+          </div>
+
+          <div class="hidden" id="viewPhoto">
+            <div class="photo-wrap" id="photoWrap">
+              <img id="photoImg" alt="拍下的数独照片" />
+              <svg id="photoSvg" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="hint-chip hidden" id="hintChip">下一步 · 在这里</div>
+            </div>
+            <p class="view-note">
+              <span id="photoNote">拖动四个圆点，让网格对准棋盘的四条边。</span>
+            </p>
+          </div>
+        </section>
+
+        <!-- 右 / 下：操作面板 -->
+        <aside class="panel" id="panel">
+          <!-- 步骤 1：拍照 -->
+          <div class="card" id="stepCapture">
+            <h2>拍一张正在做的数独</h2>
+            <p>对着纸上、书上或打印出来的棋盘拍一张，Hinto 认出数字之后，只告诉你<strong>下一步该看哪一格</strong>——答案留给你自己写。</p>
+            <div class="stack">
+              <button class="btn primary" id="btnCamera" type="button">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                打开相机
+              </button>
+              <button class="btn ink hidden" id="btnShutter" type="button">拍照</button>
+              <label class="btn" for="fileInput">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                从相册选照片
+              </label>
+              <input class="hidden" type="file" id="fileInput" accept="image/*" capture="environment" />
+              <div class="or">还没有照片？</div>
+              <div class="btn-row">
+                <button class="btn" id="btnSample" type="button">用示例题试试</button>
+                <button class="btn" id="btnManual" type="button">手动输入一盘</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 步骤 2：对齐 + 识别 -->
+          <div class="card hidden" id="stepAlign">
+            <h2>对齐棋盘四角</h2>
+            <p>拖动照片上的四个圆点，贴住棋盘外框的四个角。对得越准，识别越靠谱。</p>
+            <div class="stack">
+              <button class="btn primary" id="btnOcr" type="button">识别数字</button>
+              <div class="progress hidden" id="ocrProgress"><i></i></div>
+              <div class="progress-text" id="ocrText"></div>
+              <div class="btn-row">
+                <button class="btn" id="btnSkipOcr" type="button">跳过识别 · 手动填</button>
+                <button class="btn ghost" id="btnRetake" type="button">重拍 / 换一张</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 步骤 3+4：棋盘与提示 -->
+          <div class="card hidden" id="stepBoard">
+            <h2>确认棋盘</h2>
+            <p id="boardIntro">对照照片检查一遍：点格子可以改数字，认错的字改掉就行。</p>
+            <div class="board" id="board" role="grid" aria-label="数独棋盘"></div>
+            <div class="pad" id="pad" aria-label="数字键盘"></div>
+            <div class="legend">
+              <span><b class="g">深色粗体</b> = 题目原有数字</span>
+              <span><b class="u">蓝色</b> = 你填的 / 改过的数字</span>
+            </div>
+            <div class="status" id="boardStatus" role="status"></div>
+            <div class="stack" style="margin-top:12px">
+              <button class="btn primary" id="btnHint" type="button">给我下一步提示</button>
+              <div class="btn-row">
+                <button class="btn ghost hidden" id="btnPhotoToggle" type="button">收起照片</button>
+                <button class="btn ghost" id="btnClearUser" type="button">清掉我填的</button>
+                <button class="btn ghost" id="btnRestart" type="button">重新开始</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 提示卡 -->
+          <div class="hint-card hidden" id="hintCard">
+            <div class="level-dots" id="levelDots"><i></i><i></i><i></i></div>
+            <p class="where" id="hintWhere"></p>
+            <h3 id="hintTitle"></h3>
+            <p id="hintBody"></p>
+            <div class="chips hidden" id="hintChips"></div>
+            <p class="dim" id="hintDim"></p>
+            <div class="stack">
+              <button class="btn ink" id="btnNextHint" type="button">我写好了 · 看下一步</button>
+              <button class="btn" id="btnHintMore" type="button">再给深一点的提示</button>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <footer>
+        <span><span class="fname">Sudoku Hinto</span> —— Sudoku 就是数独；Hinto = Hint + o：西班牙语爱用 o 结尾，日语又把 t 读成 to，所以「提示」就成了 Hinto。</span>
+        <span>提示只指位置，不给答案——最后那个数字，要由你自己写下去。</span>
+      </footer>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+      'use strict';
+      /* ================= 工具 ================= */
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+      let toastTimer = null;
+      function toast(msg, ms) {
+        const t = $('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), ms || 3400);
+      }
+
+      /* ================= 状态 ================= */
+      const state = {
+        step: 1,
+        photo: null,          // { canvas, w, h }
+        corners: null,        // [TL, TR, BR, BL] in image px
+        overlayMode: 'none',  // none | align | hint
+        grid: new Array(81).fill(0),
+        given: new Array(81).fill(false),
+        touched: new Array(81).fill(false),
+        selected: -1,
+        hint: null,           // { r, c, type, unitKind, unitIdx, present:[], cands:[] }
+        hintLevel: 0,
+        stream: null,
+        dragging: -1,
+      };
+      const BOX_NAMES = ['左上宫','中上宫','右上宫','左中宫','正中宫','右中宫','左下宫','中下宫','右下宫'];
+      const boxOf = (r, c) => Math.floor(r / 3) * 3 + Math.floor(c / 3);
+      const idx = (r, c) => r * 9 + c;
+
+      /* ================= 步骤切换 ================= */
+      function setStep(n) {
+        state.step = n;
+        $('stepCapture').classList.toggle('hidden', n !== 1);
+        $('stepAlign').classList.toggle('hidden', n !== 2);
+        $('stepBoard').classList.toggle('hidden', n < 3);
+        document.querySelectorAll('#stepsBar li').forEach((li) => {
+          const s = Number(li.dataset.step);
+          li.classList.toggle('on', s === n);
+          li.classList.toggle('done', s < n);
+        });
+        const hasPhoto = !!state.photo;
+        $('workspace').classList.toggle('no-visual', !hasPhoto && n >= 3);
+        $('visualPanel').classList.toggle('hidden', !hasPhoto && n >= 3);
+        $('btnPhotoToggle').classList.toggle('hidden', !(hasPhoto && n >= 3));
+        if (n < 3) hideHint();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      /* ================= 相机 ================= */
+      async function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          toast('这个浏览器打不开相机，改用「从相册选照片」——选的时候也能直接拍照。', 4600);
+          return;
+        }
+        try {
+          state.stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1920 } },
+            audio: false,
+          });
+          const v = $('camVideo');
+          v.srcObject = state.stream;
+          await v.play().catch(() => {});
+          $('viewEmpty').classList.add('hidden');
+          $('viewPhoto').classList.add('hidden');
+          $('viewCamera').classList.remove('hidden');
+          $('btnShutter').classList.remove('hidden');
+          $('btnCamera').textContent = '相机已打开 · 对准棋盘后点「拍照」';
+        } catch (e) {
+          toast('相机打不开（可能没给权限），改用「从相册选照片」吧，选的时候也能直接拍照。', 4600);
+        }
+      }
+      function stopCamera() {
+        if (state.stream) { state.stream.getTracks().forEach((t) => t.stop()); state.stream = null; }
+        $('viewCamera').classList.add('hidden');
+        $('btnShutter').classList.add('hidden');
+        $('btnCamera').innerHTML = '重新打开相机';
+      }
+      function capturePhoto() {
+        const v = $('camVideo');
+        if (!v.videoWidth) { toast('相机还没准备好，再等一下。'); return; }
+        const canvas = document.createElement('canvas');
+        canvas.width = v.videoWidth; canvas.height = v.videoHeight;
+        canvas.getContext('2d').drawImage(v, 0, 0);
+        stopCamera();
+        setPhoto(canvas);
+      }
+
+      /* ================= 照片载入 ================= */
+      function setPhoto(canvas) {
+        state.photo = { canvas, w: canvas.width, h: canvas.height };
+        const w = canvas.width, h = canvas.height;
+        state.corners = [
+          { x: w * 0.07, y: h * 0.07 }, { x: w * 0.93, y: h * 0.07 },
+          { x: w * 0.93, y: h * 0.93 }, { x: w * 0.07, y: h * 0.93 },
+        ];
+        $('photoImg').src = canvas.toDataURL('image/jpeg', 0.92);
+        const svg = $('photoSvg');
+        svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+        $('viewEmpty').classList.add('hidden');
+        $('viewCamera').classList.add('hidden');
+        $('viewPhoto').classList.remove('hidden');
+        state.overlayMode = 'align';
+        drawOverlay();
+        setStep(2);
+      }
+      function loadImageFile(file) {
+        if (!file) return;
+        const finish = (bmp) => {
+          const maxDim = 2400;
+          const scale = Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(bmp.width * scale);
+          canvas.height = Math.round(bmp.height * scale);
+          canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+          setPhoto(canvas);
+        };
+        if (window.createImageBitmap) {
+          createImageBitmap(file, { imageOrientation: 'from-image' }).then(finish).catch(() => loadViaImg(file, finish));
+        } else loadViaImg(file, finish);
+      }
+      function loadViaImg(file, finish) {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { finish(img); URL.revokeObjectURL(url); };
+        img.onerror = () => toast('这张照片读不出来，换一张试试。');
+        img.src = url;
+      }
+
+      /* ================= 照片上的覆盖层（SVG 跟随照片缩放） ================= */
+      function bilinear(u, v) {
+        const [tl, tr, br, bl] = state.corners;
+        return {
+          x: tl.x * (1 - u) * (1 - v) + tr.x * u * (1 - v) + br.x * u * v + bl.x * (1 - u) * v,
+          y: tl.y * (1 - u) * (1 - v) + tr.y * u * (1 - v) + br.y * u * v + bl.y * (1 - u) * v,
+        };
+      }
+      function cellPoly(r, c) {
+        const u0 = c / 9, u1 = (c + 1) / 9, v0 = r / 9, v1 = (r + 1) / 9;
+        return [bilinear(u0, v0), bilinear(u1, v0), bilinear(u1, v1), bilinear(u0, v1)];
+      }
+      function pts(list) { return list.map((p) => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' '); }
+      const SVGNS = 'http://www.w3.org/2000/svg';
+      function el(name, attrs) {
+        const e = document.createElementNS(SVGNS, name);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        return e;
+      }
+      function drawOverlay() {
+        const svg = $('photoSvg');
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        svg.classList.toggle('aligning', state.overlayMode === 'align');
+        $('hintChip').classList.add('hidden');
+        if (!state.photo || !state.corners) return;
+        const { w, h } = state.photo;
+        const lw = Math.max(2, w * 0.0022);
+        if (state.overlayMode === 'align') {
+          const quad = pts(state.corners);
+          svg.appendChild(el('path', {
+            d: 'M0,0 H' + w + ' V' + h + ' H0 Z M' + state.corners.map((p, i) => (i ? 'L' : 'M') + p.x + ',' + p.y).join(' ') + ' Z',
+            fill: 'rgba(10,10,10,.38)', 'fill-rule': 'evenodd',
+          }));
+          for (let i = 1; i < 9; i++) {
+            const a1 = bilinear(i / 9, 0), a2 = bilinear(i / 9, 1);
+            const b1 = bilinear(0, i / 9), b2 = bilinear(1, i / 9);
+            const thick = i % 3 === 0;
+            svg.appendChild(el('line', { x1: a1.x, y1: a1.y, x2: a2.x, y2: a2.y, stroke: 'rgba(255,255,255,.92)', 'stroke-width': thick ? lw * 2.2 : lw }));
+            svg.appendChild(el('line', { x1: b1.x, y1: b1.y, x2: b2.x, y2: b2.y, stroke: 'rgba(255,255,255,.92)', 'stroke-width': thick ? lw * 2.2 : lw }));
+          }
+          svg.appendChild(el('polygon', { points: quad, fill: 'none', stroke: '#ffd94d', 'stroke-width': lw * 2.4 }));
+          state.corners.forEach((p) => {
+            svg.appendChild(el('circle', { cx: p.x, cy: p.y, r: w * 0.030, fill: 'rgba(255,217,77,.25)' }));
+            svg.appendChild(el('circle', { cx: p.x, cy: p.y, r: w * 0.016, fill: '#ffd94d', stroke: '#fff', 'stroke-width': lw * 1.4 }));
+          });
+        } else if (state.overlayMode === 'hint' && state.hint) {
+          const { r, c } = state.hint;
+          const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#d2432a';
+          // 行 / 列 / 宫 淡色罩
+          const rowPoly = [bilinear(0, r / 9), bilinear(1, r / 9), bilinear(1, (r + 1) / 9), bilinear(0, (r + 1) / 9)];
+          const colPoly = [bilinear(c / 9, 0), bilinear((c + 1) / 9, 0), bilinear((c + 1) / 9, 1), bilinear(c / 9, 1)];
+          svg.appendChild(el('polygon', { points: pts(rowPoly), fill: accent, opacity: 0.10 }));
+          svg.appendChild(el('polygon', { points: pts(colPoly), fill: accent, opacity: 0.10 }));
+          // 目标格：红笔圈
+          const poly = cellPoly(r, c);
+          const cx = poly.reduce((s, p) => s + p.x, 0) / 4;
+          const cy = poly.reduce((s, p) => s + p.y, 0) / 4;
+          const cellW = Math.hypot(poly[1].x - poly[0].x, poly[1].y - poly[0].y);
+          const cellH = Math.hypot(poly[3].x - poly[0].x, poly[3].y - poly[0].y);
+          const g = el('g', { class: 'pulse' });
+          g.appendChild(el('polygon', { points: pts(poly), fill: accent, opacity: 0.14 }));
+          g.appendChild(el('ellipse', {
+            cx, cy, rx: cellW * 0.66, ry: cellH * 0.66, fill: 'none',
+            stroke: accent, 'stroke-width': Math.max(3, w * 0.006), 'stroke-linecap': 'round',
+            transform: 'rotate(-4 ' + cx + ' ' + cy + ')',
+          }));
+          svg.appendChild(g);
+          // 网格细线垫底，方便对照位置
+          for (let i = 0; i <= 9; i++) {
+            const a1 = bilinear(i / 9, 0), a2 = bilinear(i / 9, 1);
+            const b1 = bilinear(0, i / 9), b2 = bilinear(1, i / 9);
+            svg.appendChild(el('line', { x1: a1.x, y1: a1.y, x2: a2.x, y2: a2.y, stroke: 'rgba(255,255,255,.55)', 'stroke-width': lw }));
+            svg.appendChild(el('line', { x1: b1.x, y1: b1.y, x2: b2.x, y2: b2.y, stroke: 'rgba(255,255,255,.55)', 'stroke-width': lw }));
+          }
+          const chip = $('hintChip');
+          chip.style.left = (cx / w * 100) + '%';
+          chip.style.top = (cy / h * 100) + '%';
+          chip.classList.remove('hidden');
+        } else {
+          // 棋盘确认阶段：只留一圈淡淡的框
+          svg.appendChild(el('polygon', { points: pts(state.corners), fill: 'none', stroke: 'rgba(255,255,255,.75)', 'stroke-width': lw * 1.6 }));
+        }
+      }
+      // 拖动角点
+      const svgEl = $('photoSvg');
+      function svgPoint(evt) {
+        const rect = svgEl.getBoundingClientRect();
+        return {
+          x: (evt.clientX - rect.left) / rect.width * state.photo.w,
+          y: (evt.clientY - rect.top) / rect.height * state.photo.h,
+        };
+      }
+      svgEl.addEventListener('pointerdown', (e) => {
+        if (state.overlayMode !== 'align' || !state.photo) return;
+        const p = svgPoint(e);
+        let best = -1, bestD = state.photo.w * 0.09;
+        state.corners.forEach((cp, i) => {
+          const d = Math.hypot(cp.x - p.x, cp.y - p.y);
+          if (d < bestD) { bestD = d; best = i; }
+        });
+        if (best >= 0) { state.dragging = best; svgEl.setPointerCapture(e.pointerId); }
+      });
+      svgEl.addEventListener('pointermove', (e) => {
+        if (state.dragging < 0) return;
+        const p = svgPoint(e);
+        state.corners[state.dragging] = {
+          x: clamp(p.x, 0, state.photo.w), y: clamp(p.y, 0, state.photo.h),
+        };
+        drawOverlay();
+      });
+      ['pointerup', 'pointercancel'].forEach((ev) => svgEl.addEventListener(ev, () => { state.dragging = -1; }));
+
+      /* ================= 透视矫正 + OCR ================= */
+      function affine(dst, src) {
+        const [d0, d1, d2] = dst, [s0, s1, s2] = src;
+        const den = d0.x * (d1.y - d2.y) + d1.x * (d2.y - d0.y) + d2.x * (d0.y - d1.y);
+        if (!den) return null;
+        const a = (s0.x * (d1.y - d2.y) + s1.x * (d2.y - d0.y) + s2.x * (d0.y - d1.y)) / den;
+        const b = (s0.x * (d2.x - d1.x) + s1.x * (d0.x - d2.x) + s2.x * (d1.x - d0.x)) / den;
+        const c = (s0.y * (d1.y - d2.y) + s1.y * (d2.y - d0.y) + s2.y * (d0.y - d1.y)) / den;
+        const d = (s0.y * (d2.x - d1.x) + s1.y * (d0.x - d2.x) + s2.y * (d1.x - d0.x)) / den;
+        const e = s0.x - a * d0.x - b * d0.y;
+        const f = s0.y - c * d0.x - d * d0.y;
+        return [a, c, b, d, e, f]; // setTransform(a,b,c,d,e,f) 的顺序在下面调用处对齐
+      }
+      function drawTri(ctx, img, d0, d1, d2, s0, s1, s2) {
+        const m = affine([d0, d1, d2], [s0, s1, s2]);
+        if (!m) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(d0.x, d0.y); ctx.lineTo(d1.x, d1.y); ctx.lineTo(d2.x, d2.y);
+        ctx.closePath(); ctx.clip();
+        ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+        ctx.drawImage(img, 0, 0);
+        ctx.restore();
+      }
+      function warpSquare(srcCanvas, corners, out) {
+        const dst = document.createElement('canvas');
+        dst.width = dst.height = out;
+        const ctx = dst.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, out, out);
+        const saved = state.corners;
+        state.corners = corners;
+        const N = 20;
+        for (let i = 0; i < N; i++) {
+          for (let j = 0; j < N; j++) {
+            const u0 = j / N, u1 = (j + 1) / N, v0 = i / N, v1 = (i + 1) / N;
+            const s00 = bilinear(u0, v0), s10 = bilinear(u1, v0), s01 = bilinear(u0, v1), s11 = bilinear(u1, v1);
+            const d00 = { x: u0 * out, y: v0 * out }, d10 = { x: u1 * out, y: v0 * out };
+            const d01 = { x: u0 * out, y: v1 * out }, d11 = { x: u1 * out, y: v1 * out };
+            drawTri(ctx, srcCanvas, d00, d10, d01, s00, s10, s01);
+            drawTri(ctx, srcCanvas, d11, d10, d01, s11, s10, s01);
+          }
+        }
+        state.corners = saved;
+        return dst;
+      }
+      function cellInkRatio(warped, r, c, cell) {
+        const t = document.createElement('canvas');
+        t.width = t.height = 48;
+        const ctx = t.getContext('2d');
+        const inset = cell * 0.24;
+        ctx.drawImage(warped, c * cell + inset, r * cell + inset, cell - inset * 2, cell - inset * 2, 0, 0, 48, 48);
+        const data = ctx.getImageData(0, 0, 48, 48).data;
+        let dark = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const g = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+          if (g < 150) dark++;
+        }
+        return dark / (48 * 48);
+      }
+      function cellDigitCanvas(warped, r, c, cell) {
+        const t = document.createElement('canvas');
+        t.width = t.height = 180;
+        const ctx = t.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 180, 180);
+        const inset = cell * 0.10;
+        ctx.drawImage(warped, c * cell + inset, r * cell + inset, cell - inset * 2, cell - inset * 2, 26, 26, 128, 128);
+        const img = ctx.getImageData(0, 0, 180, 180);
+        const d = img.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const g = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+          const v = g < 165 ? 0 : 255;
+          d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+        }
+        ctx.putImageData(img, 0, 0);
+        return t;
+      }
+      let tessWorkerPromise = null;
+      function loadTesseract() {
+        return new Promise((resolve, reject) => {
+          if (window.Tesseract) return resolve(window.Tesseract);
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.0.5/dist/tesseract.min.js';
+          s.onload = () => resolve(window.Tesseract);
+          s.onerror = () => reject(new Error('load failed'));
+          document.head.appendChild(s);
+        });
+      }
+      function getWorker() {
+        if (!tessWorkerPromise) {
+          tessWorkerPromise = (async () => {
+            const T = await loadTesseract();
+            const worker = await T.createWorker('eng', 1, {
+              workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.0.5/dist/worker.min.js',
+              corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.0.0/tesseract-core.wasm.js',
+            });
+            await worker.setParameters({ tessedit_char_whitelist: '123456789', tessedit_pageseg_mode: '10' });
+            return worker;
+          })();
+        }
+        return tessWorkerPromise;
+      }
+      async function runOcr() {
+        const btn = $('btnOcr');
+        const bar = $('ocrProgress'), fill = bar.querySelector('i'), text = $('ocrText');
+        btn.disabled = true;
+        bar.classList.remove('hidden');
+        text.textContent = '正在把照片摆正…';
+        fill.style.width = '2%';
+        try {
+          const OUT = 900, cell = OUT / 9;
+          const warped = warpSquare(state.photo.canvas, state.corners, OUT);
+          text.textContent = '正在加载识别引擎（第一次会慢一点）…';
+          const worker = await Promise.race([
+            getWorker(),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000)),
+          ]);
+          text.textContent = '正在一格一格看数字…';
+          let done = 0, found = 0;
+          const results = new Array(81).fill(0);
+          for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+              done++;
+              fill.style.width = (done / 81 * 100) + '%';
+              text.textContent = '正在一格一格看数字… ' + done + ' / 81';
+              if (cellInkRatio(warped, r, c, cell) < 0.02) continue;
+              const dc = cellDigitCanvas(warped, r, c, cell);
+              let out = await worker.recognize(dc);
+              let ch = (out.data.text || '').replace(/[^1-9]/g, '')[0];
+              if (!ch) {
+                await worker.setParameters({ tessedit_pageseg_mode: '6' });
+                out = await worker.recognize(dc);
+                ch = (out.data.text || '').replace(/[^1-9]/g, '')[0];
+                await worker.setParameters({ tessedit_pageseg_mode: '10' });
+              }
+              if (ch) { results[idx(r, c)] = Number(ch); found++; }
+            }
+          }
+          state.grid = results;
+          state.given = results.map((v) => v !== 0);
+          state.touched = new Array(81).fill(false);
+          state.selected = -1;
+          hideHint();
+          state.overlayMode = 'none';
+          drawOverlay();
+          $('photoNote').textContent = '对照照片在棋盘里检查数字；要提示时，红圈会圈在这张照片上。';
+          renderBoard();
+          setStep(3);
+          setStatus(found > 0
+            ? '认出了 ' + found + ' 个数字。对照照片检查一遍：点错的格子可以直接改。'
+            : '一个数字都没认出来——可能光线太暗或对齐偏了。可以手动填，或者回去重拍。', found > 0 ? '' : 'warn');
+        } catch (e) {
+          text.textContent = '';
+          bar.classList.add('hidden');
+          toast('识别组件没加载成功（网络原因）。没关系：点「跳过识别 · 手动填」，照着照片把数字点进棋盘，一样能拿提示。', 5600);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      /* ================= 数独引擎 ================= */
+      function candidates(grid, r, c) {
+        const used = new Set();
+        for (let i = 0; i < 9; i++) {
+          used.add(grid[idx(r, i)]);
+          used.add(grid[idx(i, c)]);
+        }
+        const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) used.add(grid[idx(br + i, bc + j)]);
+        const out = [];
+        for (let d = 1; d <= 9; d++) if (!used.has(d)) out.push(d);
+        return out;
+      }
+      function peersUsed(grid, r, c) {
+        const used = new Set();
+        for (let i = 0; i < 9; i++) { used.add(grid[idx(r, i)]); used.add(grid[idx(i, c)]); }
+        const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) used.add(grid[idx(br + i, bc + j)]);
+        used.delete(0);
+        return [...used].sort((a, b) => a - b);
+      }
+      function findConflicts(grid) {
+        const bad = new Set();
+        const units = [];
+        for (let i = 0; i < 9; i++) {
+          units.push(Array.from({ length: 9 }, (_, k) => idx(i, k)));
+          units.push(Array.from({ length: 9 }, (_, k) => idx(k, i)));
+          const br = Math.floor(i / 3) * 3, bc = (i % 3) * 3;
+          units.push(Array.from({ length: 9 }, (_, k) => idx(br + Math.floor(k / 3), bc + (k % 3))));
+        }
+        units.forEach((u) => {
+          const seen = {};
+          u.forEach((cellI) => {
+            const v = grid[cellI];
+            if (!v) return;
+            if (seen[v] !== undefined) { bad.add(cellI); bad.add(seen[v]); }
+            else seen[v] = cellI;
+          });
+        });
+        return bad;
+      }
+      function countSolutions(grid, limit) {
+        let count = 0;
+        const g = grid.slice();
+        function bt() {
+          if (count >= limit) return;
+          let best = -1, bestCands = null;
+          for (let i = 0; i < 81; i++) {
+            if (g[i]) continue;
+            const r = Math.floor(i / 9), c = i % 9;
+            const cd = candidates(g, r, c);
+            if (cd.length === 0) return;
+            if (!bestCands || cd.length < bestCands.length) { best = i; bestCands = cd; if (cd.length === 1) break; }
+          }
+          if (best < 0) { count++; return; }
+          const r = Math.floor(best / 9), c = best % 9;
+          for (const d of bestCands) {
+            g[best] = d; bt(); g[best] = 0;
+            if (count >= limit) return;
+          }
+        }
+        bt();
+        return count;
+      }
+      function unitCells(kind, i) {
+        const out = [];
+        if (kind === 'row') for (let c = 0; c < 9; c++) out.push([i, c]);
+        if (kind === 'col') for (let r = 0; r < 9; r++) out.push([r, i]);
+        if (kind === 'box') {
+          const br = Math.floor(i / 3) * 3, bc = (i % 3) * 3;
+          for (let dr = 0; dr < 3; dr++) for (let dc = 0; dc < 3; dc++) out.push([br + dr, bc + dc]);
+        }
+        return out;
+      }
+      function findHint(grid) {
+        const empties = [];
+        for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++)
+          if (!grid[idx(r, c)]) empties.push({ r, c, cands: candidates(grid, r, c) });
+        if (!empties.length) return null;
+        const richness = (r, c) => peersUsed(grid, r, c).length;
+        // 1) Naked Single：某格只剩一个候选
+        const nakeds = empties.filter((e) => e.cands.length === 1);
+        if (nakeds.length) {
+          nakeds.sort((a, b) => richness(b.r, b.c) - richness(a.r, a.c));
+          const e = nakeds[0];
+          return { r: e.r, c: e.c, type: 'naked', present: peersUsed(grid, e.r, e.c) };
+        }
+        // 2) Hidden Single：某个单位里，某数字只能落在一格
+        for (const kind of ['row', 'col', 'box']) {
+          const found = [];
+          for (let u = 0; u < 9; u++) {
+            const cells = unitCells(kind, u);
+            for (let d = 1; d <= 9; d++) {
+              if (cells.some(([r, c]) => grid[idx(r, c)] === d)) continue;
+              const spots = cells.filter(([r, c]) => !grid[idx(r, c)] && candidates(grid, r, c).includes(d));
+              if (spots.length === 1) found.push({ r: spots[0][0], c: spots[0][1], unitKind: kind, unitIdx: u });
+            }
+          }
+          if (found.length) {
+            found.sort((a, b) => richness(b.r, b.c) - richness(a.r, a.c));
+            const f = found[0];
+            return {
+              r: f.r, c: f.c, type: 'hidden', unitKind: f.unitKind, unitIdx: f.unitIdx,
+              unitPresent: unitCells(f.unitKind, f.unitIdx).map(([r, c]) => grid[idx(r, c)]).filter(Boolean).sort((a, b) => a - b),
+            };
+          }
+        }
+        // 3) 兜底：候选最少的格子
+        empties.sort((a, b) => a.cands.length - b.cands.length || richness(b.r, b.c) - richness(a.r, a.c));
+        const e = empties[0];
+        return { r: e.r, c: e.c, type: 'focus', cands: e.cands, present: peersUsed(grid, e.r, e.c) };
+      }
+
+      /* ================= 棋盘 UI ================= */
+      const boardEl = $('board');
+      const cellEls = [];
+      (function buildBoard() {
+        for (let i = 0; i < 81; i++) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'cell';
+          b.setAttribute('role', 'gridcell');
+          b.dataset.i = i;
+          b.addEventListener('click', () => { state.selected = i; renderBoard(); });
+          boardEl.appendChild(b);
+          cellEls.push(b);
+        }
+        const pad = $('pad');
+        for (let d = 1; d <= 9; d++) {
+          const b = document.createElement('button');
+          b.type = 'button'; b.textContent = d;
+          b.addEventListener('click', () => setCell(d));
+          pad.appendChild(b);
+        }
+        const er = document.createElement('button');
+        er.type = 'button'; er.textContent = '清除'; er.className = 'erase';
+        er.addEventListener('click', () => setCell(0));
+        pad.appendChild(er);
+      })();
+      function setCell(v) {
+        if (state.selected < 0) { toast('先点一下要改的格子，再点数字。'); return; }
+        const i = state.selected;
+        state.grid[i] = v;
+        if (v === 0) { state.given[i] = false; state.touched[i] = false; }
+        else if (state.given[i]) state.touched[i] = true; // 改过题面数字：仍受保护，但标成蓝色
+        // 若提示所指的格子被填上，旧提示作废
+        if (state.hint && idx(state.hint.r, state.hint.c) !== i) hideHint();
+        renderBoard();
+      }
+      function renderBoard() {
+        const conflicts = findConflicts(state.grid);
+        const sel = state.selected;
+        const selVal = sel >= 0 ? state.grid[sel] : 0;
+        const hintI = state.hint ? idx(state.hint.r, state.hint.c) : -1;
+        for (let i = 0; i < 81; i++) {
+          const e = cellEls[i];
+          const r = Math.floor(i / 9), c = i % 9;
+          e.textContent = state.grid[i] ? state.grid[i] : '';
+          e.classList.toggle('given', state.given[i] && state.grid[i] !== 0);
+          e.classList.toggle('touched', state.touched[i]);
+          e.classList.toggle('conflict', conflicts.has(i));
+          e.classList.toggle('selected', i === sel);
+          const isPeer = sel >= 0 && i !== sel && (r === Math.floor(sel / 9) || c === sel % 9 || boxOf(r, c) === boxOf(Math.floor(sel / 9), sel % 9));
+          e.classList.toggle('peer', isPeer && i !== hintI);
+          e.classList.toggle('same', selVal !== 0 && state.grid[i] === selVal && i !== sel);
+          e.classList.toggle('hint-unit', state.hint && i !== hintI && (r === state.hint.r || c === state.hint.c || boxOf(r, c) === boxOf(state.hint.r, state.hint.c)));
+          e.classList.toggle('hinted', i === hintI);
+        }
+      }
+      function setStatus(msg, kind) {
+        const s = $('boardStatus');
+        s.textContent = msg || '';
+        s.className = 'status' + (msg ? ' show' : '') + (kind ? ' ' + kind : '');
+      }
+      document.addEventListener('keydown', (e) => {
+        if (state.step < 3 || state.selected < 0) return;
+        if (/^[1-9]$/.test(e.key)) setCell(Number(e.key));
+        else if (e.key === 'Backspace' || e.key === 'Delete') setCell(0);
+        else if (e.key.startsWith('Arrow')) {
+          e.preventDefault();
+          let r = Math.floor(state.selected / 9), c = state.selected % 9;
+          if (e.key === 'ArrowUp') r = (r + 8) % 9;
+          if (e.key === 'ArrowDown') r = (r + 1) % 9;
+          if (e.key === 'ArrowLeft') c = (c + 8) % 9;
+          if (e.key === 'ArrowRight') c = (c + 1) % 9;
+          state.selected = idx(r, c);
+          renderBoard();
+        }
+      });
+
+      /* ================= 提示 ================= */
+      function unitName(kind, i) {
+        if (kind === 'row') return '第 ' + (i + 1) + ' 行';
+        if (kind === 'col') return '第 ' + (i + 1) + ' 列';
+        return BOX_NAMES[i];
+      }
+      function hideHint() {
+        state.hint = null;
+        state.hintLevel = 0;
+        $('hintCard').classList.add('hidden');
+        if (state.overlayMode === 'hint') { state.overlayMode = state.step >= 3 ? 'none' : state.overlayMode; drawOverlay(); }
+        renderBoard();
+      }
+      function computeHint() {
+        const conflicts = findConflicts(state.grid);
+        if (conflicts.size) {
+          hideHint();
+          setStatus('棋盘上有重复数字（标红的格子）：同一行、列或宫里出现了两次。先把冲突改掉，再要提示。', 'warn');
+          state.selected = [...conflicts][0];
+          renderBoard();
+          return;
+        }
+        if (state.grid.every((v) => v !== 0)) {
+          hideHint();
+          setStatus('整盘都填满了，而且没有冲突——这一局完成了，漂亮！', 'good');
+          return;
+        }
+        const sols = countSolutions(state.grid, 2);
+        if (sols === 0) {
+          hideHint();
+          setStatus('按现在的数字，这盘解不出来——多半有哪个数字认错了，或者刚才填错了。对照照片再检查一遍。', 'warn');
+          return;
+        }
+        if (sols > 1) {
+          hideHint();
+          setStatus('按现在的数字，这盘有不止一种解法——可能漏认了几个数字。对照照片看看，是不是有格子其实有数字却空着。', 'warn');
+          return;
+        }
+        const hint = findHint(state.grid);
+        if (!hint) return;
+        state.hint = hint;
+        state.hintLevel = 1;
+        setStatus('');
+        showHint();
+        document.querySelectorAll('#stepsBar li').forEach((li) => {
+          const s = Number(li.dataset.step);
+          li.classList.toggle('on', s === 4);
+          li.classList.toggle('done', s < 4);
+        });
+        $('hintCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      function showHint() {
+        const h = state.hint;
+        if (!h) return;
+        $('hintCard').classList.remove('hidden');
+        document.querySelectorAll('#levelDots i').forEach((d, i) => d.classList.toggle('on', i < state.hintLevel));
+        $('hintWhere').textContent = '下一步 · 第 ' + (h.r + 1) + ' 行，第 ' + (h.c + 1) + ' 列';
+        const chips = $('hintChips');
+        chips.classList.add('hidden');
+        chips.innerHTML = '';
+        $('hintDim').textContent = '';
+        $('btnHintMore').classList.toggle('hidden', state.hintLevel >= 3);
+        if (state.hintLevel === 1) {
+          $('hintTitle').textContent = '先看这一格';
+          $('hintBody').textContent = '照片和棋盘上都用红圈标出来了。先别看别的格子，盯着它想一想：它所在的这一行、这一列和这一宫，已经告诉你很多了。';
+          $('hintDim').textContent = '提示分三层：位置 → 方法 → 线索。答案那一层，没有。';
+        } else if (state.hintLevel === 2) {
+          if (h.type === 'naked') {
+            $('hintTitle').textContent = '方法：Naked Single（裸单）';
+            $('hintBody').textContent = '这一格所在的行、列、宫，把别的数字都占满了——九个数字里只剩一个还能放进来。把这格同行、同列、同宫的数字挨个划掉，剩下的就是它。';
+          } else if (h.type === 'hidden') {
+            $('hintTitle').textContent = '方法：Hidden Single（隐藏单）';
+            $('hintBody').textContent = '看' + unitName(h.unitKind, h.unitIdx) + '：里面有个数字无处可去——这个单位的其他空格都被行、列或宫挡住了，只剩这一格能放它。把这个单位缺的数字逐个试着放一遍，就能找到它。';
+          } else {
+            $('hintTitle').textContent = '方法：先从候选最少的格子下手';
+            $('hintBody').textContent = '这一盘暂时没有一眼能定的格子。这格是全盘候选最少的位置之一，从这里试起，需要回溯的路最短。可以先在纸上用小字把它的候选写在角落里。';
+          }
+        } else {
+          $('hintTitle').textContent = '线索：先把已知的摆出来';
+          if (h.type === 'focus') {
+            $('hintBody').textContent = '这格现在可能的数字只剩下面这几个（铅笔候选）：';
+            chips.classList.remove('hidden');
+            h.cands.forEach((d) => { const s = document.createElement('span'); s.textContent = d; chips.appendChild(s); });
+            $('hintDim').textContent = '再结合它所在的行、列、宫新出现的数字，逐个排除。';
+          } else {
+            const present = h.type === 'hidden' && h.unitPresent ? h.unitPresent : h.present;
+            const scope = h.type === 'hidden' ? unitName(h.unitKind, h.unitIdx) + '里已经有的数字' : '这格所在的行、列、宫里，已经出现过的数字';
+            $('hintBody').textContent = scope + '是下面这些。对着 1 到 9 数一遍，没露面的那一个（或几个），就是突破口：';
+            chips.classList.remove('hidden');
+            present.forEach((d) => { const s = document.createElement('span'); s.textContent = d; chips.appendChild(s); });
+            $('hintDim').textContent = '这里只摆已经出现的数字；缺的是哪一个，要你自己数出来——这一步不代劳。';
+          }
+        }
+        if (state.photo) {
+          state.overlayMode = 'hint';
+          drawOverlay();
+          $('photoNote').firstChild.textContent = '红圈就是下一步的位置——只标位置，不给数字。';
+        }
+        renderBoard();
+      }
+
+      /* ================= 事件接线 ================= */
+      $('btnCamera').addEventListener('click', startCamera);
+      $('btnShutter').addEventListener('click', capturePhoto);
+      $('fileInput').addEventListener('change', (e) => { loadImageFile(e.target.files[0]); e.target.value = ''; });
+      $('btnOcr').addEventListener('click', runOcr);
+      $('btnSkipOcr').addEventListener('click', () => {
+        state.grid = new Array(81).fill(0);
+        state.given = new Array(81).fill(false);
+        state.touched = new Array(81).fill(false);
+        state.selected = -1;
+        state.overlayMode = 'none';
+        drawOverlay();
+        $('photoNote').textContent = '对照照片在棋盘里填数字；要提示时，红圈会圈在这张照片上。';
+        renderBoard();
+        setStep(3);
+        setStatus('照着照片，把数字一个个点进棋盘（先点格子，再点下面的数字），填完点「给我下一步提示」。');
+      });
+      $('btnRetake').addEventListener('click', () => {
+        state.photo = null; state.corners = null; state.overlayMode = 'none';
+        $('viewPhoto').classList.add('hidden');
+        $('viewEmpty').classList.remove('hidden');
+        setStep(1);
+      });
+      $('btnSample').addEventListener('click', () => {
+        stopCamera();
+        state.photo = null;
+        const s = '530070000600195000098000060800060003400803001700020006060000280000419005000080079';
+        state.grid = s.split('').map(Number);
+        state.given = state.grid.map((v) => v !== 0);
+        state.touched = new Array(81).fill(false);
+        state.selected = -1;
+        hideHint(); renderBoard(); setStep(3);
+        setStatus('这是一盘示例题（经典入门局）。点任意空格，再点「给我下一步提示」试试——注意，它只会告诉你位置。');
+      });
+      $('btnManual').addEventListener('click', () => {
+        stopCamera();
+        state.photo = null;
+        state.grid = new Array(81).fill(0);
+        state.given = new Array(81).fill(false);
+        state.touched = new Array(81).fill(false);
+        state.selected = 0;
+        hideHint(); renderBoard(); setStep(3);
+        setStatus('先点格子、再点数字，把题目抄进来。抄完点「给我下一步提示」。');
+      });
+      $('btnHint').addEventListener('click', computeHint);
+      $('btnHintMore').addEventListener('click', () => {
+        if (!state.hint) return;
+        state.hintLevel = Math.min(3, state.hintLevel + 1);
+        showHint();
+      });
+      $('btnNextHint').addEventListener('click', () => {
+        if (!state.hint) { computeHint(); return; }
+        const hi = idx(state.hint.r, state.hint.c);
+        if (!state.grid[hi]) {
+          state.selected = hi;
+          renderBoard();
+          toast('先把你想到的数字填进红圈那一格（已经帮你选好了），我再帮你看下一步。');
+          return;
+        }
+        hideHint();
+        computeHint();
+      });
+      $('btnClearUser').addEventListener('click', () => {
+        for (let i = 0; i < 81; i++) if (!state.given[i]) { state.grid[i] = 0; state.touched[i] = false; }
+        hideHint(); renderBoard();
+        setStatus('已清掉你填的数字，题目原有的（包括你改过的）都保留。');
+      });
+      $('btnRestart').addEventListener('click', () => {
+        state.photo = null; state.corners = null; state.overlayMode = 'none';
+        state.grid = new Array(81).fill(0);
+        state.given = new Array(81).fill(false);
+        state.touched = new Array(81).fill(false);
+        state.selected = -1;
+        hideHint();
+        $('viewPhoto').classList.add('hidden');
+        $('viewEmpty').classList.remove('hidden');
+        setStep(1);
+      });
+      $('btnPhotoToggle').addEventListener('click', () => {
+        const p = $('visualPanel');
+        const hiddenNow = p.classList.toggle('hidden');
+        $('workspace').classList.toggle('no-visual', hiddenNow);
+        $('btnPhotoToggle').textContent = hiddenNow ? '展开照片' : '收起照片';
+      });
+
+      /* 装饰小棋盘 */
+      (function mini() {
+        const s = '530070000600195000098000060800060003400803001700020006060000280000419005000080079';
+        const wrap = $('miniGrid');
+        s.split('').forEach((ch, i) => {
+          const d = document.createElement('i');
+          d.textContent = ch === '0' ? '' : ch;
+          if (i === idx(0, 2)) d.className = 'hot';
+          wrap.appendChild(d);
+        });
+      })();
+      renderBoard();
+    </script>
+  </body>
+</html>
