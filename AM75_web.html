@@ -9,7 +9,7 @@
     <link rel="manifest" href='data:application/manifest+json,{"name":"AM 75","short_name":"AM 75","display":"standalone","start_url":".","background_color":"%230e7a5f","theme_color":"%230e7a5f"}' />
     <meta name="apple-mobile-web-app-title" content="AM 75" />
     <meta name="application-name" content="AM 75" />
-    <title>AM 75 · v1.0</title>
+    <title>AM 75 · v1.0.1</title>
     <style>
       :root{
         --bg:#f6f7f4; --panel:#ffffff; --panel2:#eef2ec; --ink:#17251f; --ink2:#5a6b62;
@@ -119,6 +119,13 @@
       .uprog{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:8px 0 4px}
       .uprog i{display:block;height:100%;background:var(--brand);transition:width .3s}
       .ubody{max-width:860px;margin:0 auto;padding:10px 16px 40px}
+      .stepnav{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
+      .stepnav .sn{min-width:40px;min-height:40px;padding:4px 9px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);font-weight:700;font-size:13.5px;color:var(--ink2)}
+      .stepnav .sn.done{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+      .stepnav .sn.cur{background:var(--brand);border-color:var(--brand);color:#fff}
+      .stepnav .sn:disabled{opacity:.38;cursor:not-allowed}
+      .stepnav .sn.navb{padding:4px 13px;color:var(--brand);border-color:var(--brand)}
+      .stepnav .sn.navb:disabled{color:var(--ink2);border-color:var(--line)}
       .stmt{white-space:pre-wrap;font-size:15.5px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
       .qtag{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--brand);text-transform:uppercase}
       .qtext{font-size:18px;font-weight:700;margin:6px 0 14px;line-height:1.5}
@@ -177,7 +184,7 @@
   <body>
     <header id="topbar">
       <div class="row">
-        <span class="brandver"><b>AM 75</b><span class="verpill" title="当前版本">v1.0</span></span>
+        <span class="brandver"><b>AM 75</b><span class="verpill" title="当前版本">v1.0.1</span></span>
         <span class="stat"><span class="ic">🔥</span><span id="stStreak">0</span><small>天连续打卡</small></span>
         <span class="stat"><span class="ic">⭐</span><span id="stXp">0</span><small>XP</small></span>
         <span class="stat"><span class="ic">✅</span><span id="stDone">0/75</span></span>
@@ -229,7 +236,7 @@
         <section id="view-me" class="view">
           <div class="card vercard">
             <span class="vn">AM 75</span>
-            <span class="vp">v1.0</span>
+            <span class="vp">v1.0.1</span>
           </div>
           <div class="card">
             <h2>⚙️ 我的 · 进度与离线</h2>
@@ -263,7 +270,7 @@
             <div class="btnrow"><button class="btn small warn" id="btnReset">重置全部进度</button></div>
             <p class="muted" id="resetMsg"></p>
           </div>
-          <p style="text-align:center;margin:18px 0 4px;font-size:14.5px;font-weight:800;color:var(--ink)">AM 75 · v1.0</p>
+          <p style="text-align:center;margin:18px 0 4px;font-size:14.5px;font-weight:800;color:var(--ink)">AM 75 · v1.0.1</p>
         </section>
       </aside>
 
@@ -572,8 +579,11 @@
       }
       function openUnit(n){
         var p = byN[n]; if(!p) return;
-        U = { p:p, steps:buildSteps(p), idx: (S.quiz[n] ? buildSteps(p).length-1 : 0) };
-        if(S.quiz[n]) U.idx = U.steps.length-1;
+        U = { p:p, steps:buildSteps(p), idx:0, max:0, doneSteps:{}, orderSaved:null };
+        if(S.quiz[n]){
+          U.idx = U.steps.length-1; U.max = U.idx;
+          U.steps.forEach(function(s,i){ U.doneSteps[i]=true; });
+        }
         document.body.classList.add("unit-open");
         renderStep();
         if(window.innerWidth < 1024) window.scrollTo(0,0); else $("work").scrollTop = 0;
@@ -590,18 +600,39 @@
       function stepShell(inner){
         var p = U.p, total = U.steps.length;
         var pct = Math.round(U.idx/total*100);
+        var mx = (typeof U.max === "number") ? U.max : U.idx;
+        var chips = "";
+        for(var ci=0; ci<total; ci++){
+          chips += '<button class="sn'+(ci===U.idx?" cur":(U.doneSteps[ci]?" done":""))+'" data-sn="'+ci+'" '+(ci>mx?"disabled":"")+' title="第 '+(ci+1)+' 步 · '+stepName(U.steps[ci].kind)+'">'+(ci+1)+'</button>';
+        }
+        var nav = '<div class="stepnav"><button class="sn navb" id="snPrev" '+(U.idx===0?"disabled":"")+'>← 上一步</button>'
+          + chips
+          + '<button class="sn navb" id="snNext" '+(U.idx>=mx?"disabled":"")+'>下一步 →</button></div>'
+          + '<div class="muted" style="margin-top:4px">已经做到过的步骤可以自由点开回看；还没做到的步骤暂时锁定。</div>';
         $("work").innerHTML =
           '<div class="uhead"><button class="uback" id="uBack">← 返回</button>'
           + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="font-size:18px">第 '+p.n+' 题 · '+esc(p.t)+'</b>'
           + '<span class="badge '+(p.d==="Easy"?"easy":p.d==="Hard"?"hard":"med")+'">'+p.d+' · '+XP[p.d]+' XP</span>'
           + '<span class="badge">'+esc(p.p)+'</span><span class="badge">第 '+Math.ceil(p.n/3)+' 天</span></div>'
           + '<div class="uprog"><i style="width:'+pct+'%"></i></div>'
-          + '<div class="muted">第 '+(U.idx+1)+' / '+total+' 步 · '+stepName(U.steps[U.idx].kind)+'</div></div>'
+          + '<div class="muted">第 '+(U.idx+1)+' / '+total+' 步 · '+stepName(U.steps[U.idx].kind)+'</div>'
+          + nav + '</div>'
           + '<div class="ubody">'+inner+'</div>';
         $("uBack").onclick = closeUnit;
+        var snb = document.querySelectorAll("[data-sn]");
+        for(var si=0; si<snb.length; si++){ snb[si].onclick = function(){ jumpStep(parseInt(this.getAttribute("data-sn"),10)); }; }
+        var pv = $("snPrev"); if(pv) pv.onclick = function(){ jumpStep(U.idx-1); };
+        var nx = $("snNext"); if(nx) nx.onclick = function(){ jumpStep(U.idx+1); };
       }
       function stepName(k){ return {intro:"读题", mc:"小题", tf:"判断", order:"拼装", final:"IDE 终测"}[k] || "小题"; }
+      function jumpStep(i){
+        if(!U || i<0 || i>U.max || i>=U.steps.length) return;
+        if(typeof ed !== "undefined" && ed && ed.saveCode){ try{ ed.saveCode(false); }catch(e){} }
+        U.idx = i; renderStep();
+        if(window.innerWidth < 1024) window.scrollTo(0,0); else $("work").scrollTop = 0;
+      }
       function renderStep(){
+        if(U.idx > U.max) U.max = U.idx;
         var st = U.steps[U.idx], p = U.p;
         if(st.kind==="intro") return renderIntro();
         if(st.kind==="mc" || st.kind==="tf") return renderMC(st);
@@ -640,6 +671,17 @@
         );
         var doneFlag = false;
         var btns = document.querySelectorAll("#opts .opt");
+        if(U.doneSteps[U.idx]){
+          /* 复习模式：这一步已经答对，直接展示正确答案与讲解，可用步骤条自由跳转 */
+          doneFlag = true;
+          for(var r=0;r<btns.length;r++){ btns[r].disabled = true; btns[r].style.opacity = ".75"; if(r===ansIdx) btns[r].classList.add("pick-ok"); }
+          var rbox = $("expBox");
+          rbox.className = "explain show ok";
+          rbox.innerHTML = "<b>✓ 这一步已答对。</b>" + esc(st.exp);
+          $("nextRow").style.display = "flex";
+          $("uNext").onclick = function(){ U.idx++; if(U.idx === U.steps.length-1 && !S.quiz[U.p.n]){ S.quiz[U.p.n]=true; save(); } renderStep(); };
+          return;
+        }
         for(var i=0;i<btns.length;i++){
           btns[i].onclick = function(){
             if(doneFlag) return;
@@ -647,6 +689,7 @@
             var box = $("expBox");
             if(pick === ansIdx){
               doneFlag = true;
+              U.doneSteps[U.idx] = true;
               this.classList.add("pick-ok");
               box.className = "explain show ok";
               box.innerHTML = "<b>✓ 答对了。</b>" + esc(st.exp);
@@ -667,8 +710,20 @@
         /* 保证不是原序 */
         var same = shuffled.every(function(v,i){ return v===i; });
         if(same && shuffled.length>1){ var t=shuffled[0]; shuffled[0]=shuffled[1]; shuffled[1]=t; }
-        var pool = shuffled.slice(), ans = [];
+        var reviewOrder = !!U.doneSteps[U.idx];
+        var pool, ans;
         var marks = null; /* 检查后的逐位对错：marks[k]===true 表示第 k+1 个位置放对了；未检查时为 null */
+        if(reviewOrder){
+          /* 已通过：直接摆出正确顺序，可调整后重新检查 */
+          ans = st.steps.map(function(s,i){ return i; });
+          pool = [];
+          marks = ans.map(function(){ return true; });
+        } else if(U.orderSaved){
+          pool = U.orderSaved.pool.slice(); ans = U.orderSaved.ans.slice();
+        } else {
+          pool = shuffled.slice(); ans = [];
+        }
+        function persistOrder(){ U.orderSaved = { pool:pool.slice(), ans:ans.slice() }; }
         function draw(){
           stepShell(
             '<div class="qtag">'+esc(st.tag||"拼装")+'</div>'
@@ -688,16 +743,17 @@
             + '<span id="nextSlot"></span></div>'
           );
           var pb = document.querySelectorAll("[data-pool]");
-          for(var i=0;i<pb.length;i++) pb[i].onclick = function(){ var k=parseInt(this.getAttribute("data-pool"),10); marks=null; ans.push(pool[k]); pool.splice(k,1); draw(); };
+          for(var i=0;i<pb.length;i++) pb[i].onclick = function(){ var k=parseInt(this.getAttribute("data-pool"),10); marks=null; ans.push(pool[k]); pool.splice(k,1); persistOrder(); draw(); };
           var ab = document.querySelectorAll("[data-ans]");
-          for(var j=0;j<ab.length;j++) ab[j].onclick = function(){ var k=parseInt(this.getAttribute("data-ans"),10); marks=null; pool.push(ans[k]); ans.splice(k,1); draw(); };
-          $("btnReorder").onclick = function(){ marks=null; pool = pool.concat(ans); ans = []; draw(); };
+          for(var j=0;j<ab.length;j++) ab[j].onclick = function(){ var k=parseInt(this.getAttribute("data-ans"),10); marks=null; pool.push(ans[k]); ans.splice(k,1); persistOrder(); draw(); };
+          $("btnReorder").onclick = function(){ marks=null; pool = pool.concat(ans); ans = []; persistOrder(); draw(); };
           $("btnCheck").onclick = function(){
             marks = ans.map(function(v,i){ return v===i; });
             var ok = marks.every(function(m){ return m; });
             draw();
             var box = $("expBox");
             if(ok){
+              U.doneSteps[U.idx] = true;
               box.className = "explain show ok";
               box.innerHTML = "<b>✓ 顺序全对。</b>这就是最优解的骨架：先在脑子里把这几步过一遍，终测写代码时照着它填。";
               $("nextSlot").innerHTML = '<button class="btn" id="uNext">继续 →</button>';
@@ -714,6 +770,13 @@
           };
         }
         draw();
+        if(reviewOrder){
+          var obox = $("expBox");
+          obox.className = "explain show ok";
+          obox.innerHTML = "<b>✓ 这一步已完成。</b>这就是最优解的正确顺序；想重练可以点块调整后重新检查，或用上方步骤条跳到其他步。";
+          $("nextSlot").innerHTML = '<button class="btn" id="uNext">继续 →</button>';
+          $("uNext").onclick = function(){ U.idx++; renderStep(); };
+        }
       }
       /* ================= IDE 终测 ================= */
       var ed = null; /* {ta, gutter} */
