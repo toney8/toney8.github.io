@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Me — Toney8</title>
+<meta name="description" content="Send a message to Toney8.">
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://formspree.io; form-action https://formspree.io/f/xyewyejj; base-uri 'none'; object-src 'none';">
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Helvetica, Arial, sans-serif;
+    background: #f7f7f8; color: #1a1a1a; line-height: 1.6;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 48px 20px 64px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  p.sub { color: #666; margin: 0 0 28px; }
+  a { color: #2563eb; }
+  form {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 12px;
+    padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  label { display: block; font-weight: 600; margin: 0 0 6px; }
+  label .req { color: #dc2626; }
+  input[type="text"], input[type="email"], textarea {
+    width: 100%; padding: 12px; font: inherit; font-size: 16px;
+    border: 1px solid #d1d5db; border-radius: 8px; background: #fff;
+  }
+  input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+    outline: none; border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  }
+  textarea { min-height: 180px; resize: vertical; }
+  .field { margin-bottom: 20px; }
+  .meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; color: #666; margin-top: 6px;
+  }
+  .meta .count.over { color: #dc2626; font-weight: 600; }
+  .hint { font-weight: 400; }
+  .error { color: #dc2626; font-size: 13px; margin-top: 6px; display: none; }
+  .error.show { display: block; }
+  button {
+    width: 100%; padding: 13px; font: inherit; font-size: 16px; font-weight: 600;
+    color: #fff; background: #111; border: 0; border-radius: 8px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: #333; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  #status {
+    margin-top: 16px; padding: 14px 16px; border-radius: 8px;
+    font-size: 15px; display: none; white-space: pre-wrap; word-break: break-word;
+  }
+  #status.ok { display: block; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  #status.err { display: block; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+  .hp { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+  .privacy { font-size: 13px; color: #666; margin: 16px 0 0; text-align: center; }
+  footer { margin-top: 28px; font-size: 13px; color: #888; text-align: center; }
+  @media (max-width: 520px) { form { padding: 20px; } main { padding-top: 32px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Contact Me</h1>
+  <p class="sub">Send me a message — I'll get it by email. No email address is shown on this page.</p>
+
+  <form id="contact-form" action="https://formspree.io/f/xyewyejj" method="POST" novalidate>
+
+    <input type="hidden" name="_subject" id="email-subject" value="New message from toney8.github.io">
+
+    <div class="hp" aria-hidden="true">
+      <label for="website">Leave this field empty</label>
+      <input type="text" id="website" name="_gotcha" tabindex="-1" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="title">Title <span class="req">*</span></label>
+      <input type="text" id="title" name="title" required
+             minlength="3" maxlength="100"
+             placeholder="e.g. Hello — I'd like to get in touch"
+             autocomplete="off">
+      <div class="meta">
+        <span class="hint">3–100 characters</span>
+        <span class="count" id="title-count">0 / 100</span>
+      </div>
+      <div class="error" id="title-error"></div>
+    </div>
+
+    <div class="field">
+      <label for="email">Your Email <span class="req">*</span></label>
+      <input type="email" id="email" name="email" required
+             maxlength="254" inputmode="email"
+             pattern="[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
+             placeholder="e.g. you@example.com"
+             autocomplete="email">
+      <div class="meta">
+        <span class="hint">So I can reply to you — e.g. you@example.com, max 254 characters</span>
+      </div>
+      <div class="error" id="email-error"></div>
+    </div>
+
+    <div class="field">
+      <label for="message">Message <span class="req">*</span></label>
+      <textarea id="message" name="message" required
+                minlength="10" maxlength="2000"
+                placeholder="Write your message here..."></textarea>
+      <div class="meta">
+        <span class="hint">10–2000 characters</span>
+        <span class="count" id="message-count">0 / 2000</span>
+      </div>
+      <div class="error" id="message-error"></div>
+    </div>
+
+    <button type="submit" id="submit-btn">Send Message</button>
+
+    <div id="status" role="status" aria-live="polite"></div>
+  </form>
+
+  <p class="privacy">Privacy: your email address is only used to reply to this message. It is not shared, sold, or added to any mailing list.</p>
+
+  <footer><a href="https://toney8.github.io">← Back to Toney's Pages</a></footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var TITLE_MIN = 3, TITLE_MAX = 100;
+  var MSG_MIN = 10, MSG_MAX = 2000;
+  var MIN_FILL_MS = 2000;
+  var COOLDOWN_MS = 30000;
+  var formLoadedAt = Date.now();
+  var lastSentAt = 0;
+
+  function stripUnsafeChars(s) {
+    return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u0080-\u009F\u00AD\u061C\u180E\u200B\u200C\u200D\u202A-\u202E\u2066-\u2069\uFEFF]/g, '');
+  }
+  var EMAIL_MAX = 254;
+  var EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+  function isValidEmail(email) {
+    if (!email || email.length > EMAIL_MAX || /[\r\n\s]/.test(email)) return false;
+    if (!EMAIL_RE.test(email)) return false;
+    var parts = email.split('@');
+    if (parts.length !== 2) return false;
+    var local = parts[0], domain = parts[1];
+    if (local.length < 1 || local.length > 64) return false;
+    if (local.charAt(0) === '.' || local.charAt(local.length - 1) === '.') return false;
+    if (local.indexOf('..') !== -1) return false;
+    if (domain.length < 1 || domain.length > 253) return false;
+    if (domain.charAt(0) === '.' || domain.charAt(0) === '-' ||
+        domain.charAt(domain.length - 1) === '.' || domain.charAt(domain.length - 1) === '-') return false;
+    if (domain.indexOf('..') !== -1) return false;
+    var labels = domain.split('.');
+    var tld = labels[labels.length - 1];
+    if (!/^[A-Za-z]{2,}$/.test(tld)) return false;
+    for (var i = 0; i < labels.length; i++) {
+      var label = labels[i];
+      if (label.length < 1 || label.length > 63) return false;
+      if (label.charAt(0) === '-' || label.charAt(label.length - 1) === '-') return false;
+    }
+    return true;
+  }
+
+  var form = document.getElementById('contact-form');
+  var titleEl = document.getElementById('title');
+  var emailEl = document.getElementById('email');
+  var msgEl = document.getElementById('message');
+  var titleCount = document.getElementById('title-count');
+  var msgCount = document.getElementById('message-count');
+  var titleErr = document.getElementById('title-error');
+  var emailErr = document.getElementById('email-error');
+  var msgErr = document.getElementById('message-error');
+  var statusEl = document.getElementById('status');
+  var submitBtn = document.getElementById('submit-btn');
+  var subjectEl = document.getElementById('email-subject');
+  var honeypot = document.getElementById('website');
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function setStatus(kind, text) {
+    statusEl.className = kind;
+    statusEl.textContent = text;
+  }
+  function setError(el, msg) {
+    el.textContent = msg;
+    el.classList.toggle('show', !!msg);
+  }
+
+  function enforce(el, max, counter) {
+    if (el.value.length > max) el.value = el.value.slice(0, max);
+    counter.textContent = el.value.length + ' / ' + max;
+    counter.classList.toggle('over', el.value.length >= max);
+  }
+  titleEl.addEventListener('input', function () { enforce(titleEl, TITLE_MAX, titleCount); setError(titleErr, ''); });
+  emailEl.addEventListener('input', function () {
+    if (emailEl.value.length > EMAIL_MAX) emailEl.value = emailEl.value.slice(0, EMAIL_MAX);
+    setError(emailErr, '');
+  });
+  msgEl.addEventListener('input', function () { enforce(msgEl, MSG_MAX, msgCount); setError(msgErr, ''); });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    setStatus('', '');
+    setError(titleErr, '');
+    setError(emailErr, '');
+    setError(msgErr, '');
+
+    if (honeypot.value) { setStatus('ok', 'Thanks! Your message has been sent.'); form.reset(); return; }
+
+    var now = Date.now();
+    if (now - lastSentAt < COOLDOWN_MS) {
+      var waitSec = Math.ceil((COOLDOWN_MS - (now - lastSentAt)) / 1000);
+      setStatus('err', 'Thanks — you just sent a message. Please wait ' + waitSec + ' seconds before sending another.');
+      return;
+    }
+    if (now - formLoadedAt < MIN_FILL_MS) {
+      setStatus('err', 'That was a bit too fast — please take a moment to write your message, then try again.');
+      return;
+    }
+
+    var title = stripUnsafeChars(titleEl.value).trim().replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ');
+    var email = stripUnsafeChars(emailEl.value).trim();
+    var message = stripUnsafeChars(msgEl.value).trim();
+
+    if (title.length < TITLE_MIN || title.length > TITLE_MAX) {
+      setError(titleErr, 'Title must be ' + TITLE_MIN + '–' + TITLE_MAX + ' characters.');
+      titleEl.focus(); return;
+    }
+    if (!isValidEmail(email)) {
+      setError(emailErr, 'Please enter a valid email address (e.g. you@example.com) so I can reply to you.');
+      emailEl.focus(); return;
+    }
+    if (message.length < MSG_MIN || message.length > MSG_MAX) {
+      setError(msgErr, 'Message must be ' + MSG_MIN + '–' + MSG_MAX + ' characters.');
+      msgEl.focus(); return;
+    }
+
+    var safeMessage = escapeHtml(message);
+
+    titleEl.value = title;
+    enforce(titleEl, TITLE_MAX, titleCount);
+    enforce(msgEl, MSG_MAX, msgCount);
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    subjectEl.value = title.slice(0, TITLE_MAX);
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ message: safeMessage, _subject: subjectEl.value, _replyto: email, _gotcha: '' })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('Formspree returned ' + res.status);
+      return res.json();
+    }).then(function () {
+      setStatus('ok', 'Thanks! Your message "' + escapeHtml(title) + '" has been sent.');
+      lastSentAt = Date.now();
+      form.reset();
+      titleCount.textContent = '0 / ' + TITLE_MAX;
+      msgCount.textContent = '0 / ' + MSG_MAX;
+    }).catch(function () {
+      setStatus('err', 'Sorry, sending failed. Please try again in a moment.');
+    }).finally(function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Message';
+    });
+  });
+})();
+</script>
+</body>
+</html>
