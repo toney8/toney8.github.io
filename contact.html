@@ -3,73 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contact Me — Toney8</title>
-<meta name="description" content="Send a message to Toney8.">
+<title>Contact Toney | AI Engineer</title>
+<meta name="description" content="Contact Toney, AI Engineer.">
+<meta name="theme-color" content="#162d28">
 
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://formspree.io; form-action https://formspree.io/f/xyewyejj; base-uri 'none'; object-src 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://formspree.io; form-action https://formspree.io/f/xyewyejj; base-uri 'none'; object-src 'none';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
+  :root {
+    color-scheme: light;
+    --ink: #162d28;
+    --paper: #f3f5ef;
+    --white: #fcfcf8;
+    --lime: #c3ed69;
+    --coral: #ff826b;
+    --muted: #64716c;
+    --rule: #dce1d8;
+  }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Helvetica, Arial, sans-serif;
-    background: #f7f7f8; color: #1a1a1a; line-height: 1.6;
-  }
-  main { max-width: 640px; margin: 0 auto; padding: 48px 20px 64px; }
-  h1 { font-size: 28px; margin: 0 0 8px; }
-  p.sub { color: #666; margin: 0 0 28px; }
-  a { color: #2563eb; }
-  form {
-    background: #fff; border: 1px solid #e5e5e5; border-radius: 12px;
-    padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  }
-  label { display: block; font-weight: 600; margin: 0 0 6px; }
-  label .req { color: #dc2626; }
-  input[type="text"], input[type="email"], textarea {
-    width: 100%; padding: 12px; font: inherit; font-size: 16px;
-    border: 1px solid #d1d5db; border-radius: 8px; background: #fff;
-  }
-  input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
-    outline: none; border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-  }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); line-height: 1.6; font-family: "DM Sans", sans-serif; }
+  a { color: inherit; }
+  a:focus-visible, input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid var(--coral); outline-offset: 3px; }
+  h1, h2, p { margin-top: 0; }
+  h1, h2 { font-family: "Space Grotesk", sans-serif; letter-spacing: 0; }
+  .opening { color: var(--white); background-color: var(--ink); background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 36px 36px; }
+  .site-header { max-width: 1180px; margin: 0 auto; padding: 22px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-family: "Space Grotesk", sans-serif; font-size: 18px; font-weight: 700; }
+  .mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; background: var(--lime); color: var(--ink); }
+  .nav-links { display: flex; align-items: center; gap: 26px; }
+  .nav-links a { color: var(--white); font-size: 14px; text-decoration: none; }
+  .nav-links a:hover, .footer-links a:hover { color: var(--lime); }
+  .contact-hero { max-width: 1180px; margin: 0 auto; padding: 40px 40px 66px; }
+  .eyebrow { margin-bottom: 14px; color: var(--lime); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+  h1 { margin-bottom: 12px; font-size: 62px; line-height: 1.05; }
+  .contact-hero p:last-child { max-width: 540px; margin-bottom: 0; color: #d2dbd5; font-size: 17px; }
+  .contact-main { background: var(--white); }
+  .contact-layout { max-width: 1180px; margin: 0 auto; padding: 72px 40px 88px; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 76px; }
+  .section-kicker { margin-bottom: 16px; color: #4a7734; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+  .contact-copy h2 { max-width: 400px; margin-bottom: 16px; font-size: 38px; line-height: 1.1; }
+  .contact-copy > p:last-child { max-width: 380px; margin-bottom: 0; color: var(--muted); font-size: 16px; }
+  form { min-width: 0; }
+  label { display: block; margin: 0 0 7px; font-weight: 600; }
+  label .req { color: #b94a36; }
+  input[type="text"], input[type="email"], textarea { width: 100%; padding: 12px; border: 1px solid #cbd2c9; border-radius: 4px; background: var(--white); color: var(--ink); font: inherit; font-size: 16px; }
+  input[type="text"]:focus, input[type="email"]:focus, textarea:focus { outline: 3px solid rgba(195,237,105,.55); border-color: #73934b; }
   textarea { min-height: 180px; resize: vertical; }
   .field { margin-bottom: 20px; }
-  .meta {
-    display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 13px; color: #666; margin-top: 6px;
-  }
-  .meta .count.over { color: #dc2626; font-weight: 600; }
+  .meta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 6px; color: var(--muted); font-size: 13px; }
+  .meta .count.over { color: #b94a36; font-weight: 600; }
   .hint { font-weight: 400; }
-  .error { color: #dc2626; font-size: 13px; margin-top: 6px; display: none; }
+  .error { display: none; margin-top: 6px; color: #a63f32; font-size: 13px; }
   .error.show { display: block; }
-  button {
-    width: 100%; padding: 13px; font: inherit; font-size: 16px; font-weight: 600;
-    color: #fff; background: #111; border: 0; border-radius: 8px; cursor: pointer;
-  }
-  button:hover:not(:disabled) { background: #333; }
+  button { min-height: 46px; padding: 0 18px; border: 0; border-radius: 5px; background: var(--lime); color: var(--ink); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+  button:hover:not(:disabled) { background: #d6ff8a; }
   button:disabled { opacity: .55; cursor: not-allowed; }
-  #status {
-    margin-top: 16px; padding: 14px 16px; border-radius: 8px;
-    font-size: 15px; display: none; white-space: pre-wrap; word-break: break-word;
-  }
-  #status.ok { display: block; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-  #status.err { display: block; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-
+  #status { display: none; margin-top: 16px; padding: 14px 16px; border-radius: 4px; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+  #status.ok { display: block; border: 1px solid #b8d98a; background: #eef6e2; color: #25451e; }
+  #status.err { display: block; border: 1px solid #f0b5a9; background: #fff0ed; color: #7a2c20; }
   .hp { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
-  .privacy { font-size: 13px; color: #666; margin: 16px 0 0; text-align: center; }
-  footer { margin-top: 28px; font-size: 13px; color: #888; text-align: center; }
-  @media (max-width: 520px) { form { padding: 20px; } main { padding-top: 32px; } }
+  .privacy { margin: 16px 0 0; color: var(--muted); font-size: 13px; }
+  .site-footer { background: var(--ink); color: var(--white); }
+  .footer-inner { max-width: 1180px; min-height: 132px; margin: 0 auto; padding: 30px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .footer-note { margin: 0; color: #c5d0ca; font-size: 13px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 24px; }
+  .footer-links a { color: var(--white); font-size: 14px; font-weight: 600; text-decoration: none; }
+  @media (max-width: 760px) {
+    .site-header { padding: 18px 24px; }
+    .contact-hero { padding: 34px 24px 54px; }
+    h1 { font-size: 54px; }
+    .contact-layout { grid-template-columns: 1fr 1.2fr; gap: 36px; padding: 60px 24px 72px; }
+    .contact-copy h2 { font-size: 32px; }
+    .footer-inner { padding: 28px 24px; }
+  }
+  @media (max-width: 560px) {
+    .site-header { align-items: flex-start; padding: 16px 20px; }
+    .wordmark { flex-shrink: 0; }
+    .wordmark span:last-child { white-space: nowrap; }
+    .nav-links { gap: 16px; }
+    .nav-links a { font-size: 12px; }
+    .contact-hero { padding: 24px 20px 42px; }
+    h1 { font-size: 48px; }
+    .contact-hero p:last-child { font-size: 15px; }
+    .contact-layout { grid-template-columns: 1fr; gap: 36px; padding: 46px 20px 58px; }
+    .contact-copy h2 { font-size: 30px; }
+    .footer-inner { align-items: flex-start; flex-direction: column; padding: 28px 20px; }
+    .footer-links { gap: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
-<main>
-  <h1>Contact Me</h1>
-  <p class="sub">Send me a message — I'll get it by email. No email address is shown on this page.</p>
+<header class="opening" id="top">
+  <div class="site-header">
+    <a class="wordmark" href="index.html" aria-label="Toney home"><span class="mark">T</span><span>Toney</span></a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="https://www.linkedin.com/in/toney" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    </nav>
+  </div>
+  <div class="contact-hero">
+    <p class="eyebrow">Contact</p>
+    <h1>Let's talk.</h1>
+    <p>Have a question, idea, or message? Send a note using the form below.</p>
+  </div>
+</header>
+<main class="contact-main">
+  <div class="contact-layout">
+    <section class="contact-copy" aria-labelledby="contact-title">
+      <p class="section-kicker">Get in touch</p>
+      <h2 id="contact-title">Start a conversation.</h2>
+      <p>Your message will be sent privately. Your email is only used to reply.</p>
+    </section>
+    <form id="contact-form" action="https://formspree.io/f/xyewyejj" method="POST" novalidate>
 
-  <form id="contact-form" action="https://formspree.io/f/xyewyejj" method="POST" novalidate>
-
-    <input type="hidden" name="_subject" id="email-subject" value="New message from toney8.github.io">
+    <input type="hidden" name="_subject" id="email-subject" value="New message from Toney">
 
     <div class="hp" aria-hidden="true">
       <label for="website">Leave this field empty</label>
@@ -117,12 +168,20 @@
     <button type="submit" id="submit-btn">Send Message</button>
 
     <div id="status" role="status" aria-live="polite"></div>
-  </form>
-
-  <p class="privacy">Privacy: your email address is only used to reply to this message. It is not shared, sold, or added to any mailing list.</p>
-
-  <footer><a href="https://toney8.github.io">← Back to Toney's Pages</a></footer>
+      <p class="privacy">Your email address is not shared, sold, or added to any mailing list.</p>
+    </form>
+  </div>
 </main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-note">Toney · AI Engineer</p>
+    <nav class="footer-links" aria-label="Contact and profiles">
+      <a href="index.html">Home</a>
+      <a href="https://www.linkedin.com/in/toney" target="_blank" rel="noopener noreferrer">LinkedIn <span aria-hidden="true">&nearr;</span></a>
+      <a href="https://apps.apple.com/us/app/dsa-75-coding-interview-prep/id6834288626" target="_blank" rel="noopener noreferrer">DSA 75 <span aria-hidden="true">&nearr;</span></a>
+    </nav>
+  </div>
+</footer>
 
 <script>
 (function () {
